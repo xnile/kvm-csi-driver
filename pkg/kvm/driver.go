@@ -20,24 +20,7 @@ type Driver struct {
 const (
 	version       = "1.0.0"
 	driverName    = "kvm.csi.dianduidian.com"
-	TopologyKey   = "topology." + "dianduidian.com" + "/zone"
 	DevicePathKey = "devicePath"
-)
-
-var (
-	volCaps = []csi.VolumeCapability_AccessMode{
-		{
-			Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
-		},
-	}
-
-	// controllerCaps represents the capability of controller service
-	// https://github.com/container-storage-interface/spec/blob/master/lib/go/csi/csi.pb.go
-	ctlCaps = []csi.ControllerServiceCapability_RPC_Type{
-		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
-		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
-		csi.ControllerServiceCapability_RPC_GET_CAPACITY,
-	}
 )
 
 func NewDriver(nodeID, endpoint string) *Driver {
@@ -50,20 +33,6 @@ func NewDriver(nodeID, endpoint string) *Driver {
 
 	return n
 }
-
-// func (n *kvmDriver) Run() {
-// 	n.ns = NewNodeServer(n)
-
-// 	// n.ns = NewNodeServer(n)
-// 	s := NewNonBlockingGRPCServer()
-// 	s.Start(n.endpoint,
-// 		NewDefaultIdentityServer(n),
-// 		// KVM plugin has not implemented ControllerServer
-// 		// using default controllerserver.
-// 		NewControllerServer(n),
-// 		n.ns)
-// 	s.Wait()
-// }
 
 func (d *Driver) Run() {
 
@@ -82,6 +51,7 @@ func (d *Driver) Run() {
 	csi.RegisterNodeServer(srv, node)
 
 	proto, addr, err := ParseEndpoint(d.endpoint)
+	klog.V(4).Infof("protocol: %s,addr: %s", proto, addr)
 	if err != nil {
 		klog.Fatal(err.Error())
 	}
@@ -102,13 +72,13 @@ func (d *Driver) Run() {
 }
 
 func logGRPC(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	klog.V(3).Infof("GRPC call: %s", info.FullMethod)
-	klog.V(5).Infof("GRPC request: %s", protosanitizer.StripSecrets(req))
+	klog.V(4).Infof("GRPC call: %s", info.FullMethod)
+	klog.V(4).Infof("GRPC request: %s", protosanitizer.StripSecrets(req))
 	resp, err := handler(ctx, req)
 	if err != nil {
 		klog.Errorf("GRPC error: %v", err)
 	} else {
-		klog.V(5).Infof("GRPC response: %s", protosanitizer.StripSecrets(resp))
+		klog.V(4).Infof("GRPC response: %s", protosanitizer.StripSecrets(resp))
 	}
 	return resp, err
 }

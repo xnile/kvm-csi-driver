@@ -11,9 +11,9 @@ var (
 	nodeID   string
 )
 
-func init() {
-	flag.Set("logtostderr", "true")
-}
+// func init() {
+// 	flag.Set("logtostderr", "true")
+// }
 
 func main() {
 	flag.StringVar(&endpoint, "endpoint", "", "CSI Endpoint")
